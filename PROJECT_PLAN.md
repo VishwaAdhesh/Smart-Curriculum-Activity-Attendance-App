@@ -1,0 +1,143 @@
+# SHI - Smart Curriculum Activity & Attendance App
+
+## Project Plan & Architecture Document
+
+---
+
+## 1. SYSTEM ARCHITECTURE DIAGRAM
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           SHI SYSTEM ARCHITECTURE                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+                              ┌─────────────────────┐
+                              │     CLIENT SIDE     │
+                              │   (React + Tailwind)│
+                              └──────────┬──────────┘
+                                         │
+                    ┌────────────────────┼────────────────────┐
+                    │                    │                    │
+                    ▼                    ▼                    ▼
+           ┌───────────────┐    ┌───────────────┐    ┌───────────────┐
+           │   Student     │    │   Teacher     │    │    Admin      │
+           │   Portal      │    │   Portal      │    │   Portal      │
+           └───────┬───────┘    └───────┬───────┘    └───────┬───────┘
+                   │                    │                    │
+                   └────────────────────┼────────────────────┘
+                                        │
+                              ┌─────────▼─────────┐
+                              │   RESTful APIs   │
+                              │   (Express.js)   │
+                              └─────────┬─────────┘
+                                        │
+                    ┌────────────────────┼────────────────────┐
+                    │                    │                    │
+                    ▼                    ▼                    ▼
+           ┌───────────────┐    ┌───────────────┐    ┌───────────────┐
+           │   Auth        │    │   Business    │    │   Validation  │
+           │   Middleware  │    │   Logic       │    │   Middleware  │
+           └───────┬───────┘    └───────┬───────┘    └───────┬───────┘
+                   │                    │                    │
+                   └────────────────────┼────────────────────┘
+                                        │
+                              ┌─────────▼─────────┐
+                              │   MongoDB         │
+                              │   (Mongoose ODM)  │
+                              └────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            DATABASE SCHEMA                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  ┌────────────┐       ┌────────────┐       ┌────────────┐
+  │  Students  │       │  Teachers  │       │   Courses  │
+  ├────────────┤       ├────────────┤       ├────────────┤
+  │ _id        │       │ _id        │       │ _id        │
+  │ name       │       │ name       │       │ name       │
+  │ email      │       │ email      │       │ code       │
+  │ password   │       │ password   │       │ teacher_id │
+  │ rollNumber │       │ department │       │ credits    │
+  │ department │       │ courses[]  │       └──────┬─────┘
+  │ courses[]  │       └──────┬─────┘              │
+  └──────┬─────┘              │                     │
+         │                   └─────────────────────┼─────────────────────┐
+         │                                             │                     │
+         ▼                                             ▼                     ▼
+  ┌──────────────┐                              ┌──────────────┐    ┌──────────────┐
+  │  Attendance  │                              │  Activities  │    │ Notifications│
+  ├──────────────┤                              ├──────────────┤    ├──────────────┤
+  │ _id          │                              │ _id          │    │ _id          │
+  │ student_id   │◄──────────┐                   │ title        │    │ user_id      │
+  │ course_id    │           │                   │ description  │    │ message      │
+  │ date         │           │                   │ date         │    │ type         │
+  │ status       │           │                   │ course_id    │    │ read         │
+  │ marked_by    │           │                   │ created_by   │    │ createdAt    │
+  └──────────────┘           │                   └──────────────┘    └──────────────┘
+                             │                           ▲
+                             └───────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         AUTHENTICATION FLOW                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    ┌──────────┐      ┌──────────┐      ┌──────────┐      ┌──────────┐
+    │  Login   │──────►│ Validate │──────►│ Generate │──────►│  Store   │
+    │  Request │      │  creds   │      │   JWT    │      │   JWT    │
+    └──────────┘      └──────────┘      └──────────┘      └──────────┘
+                                                                    │
+       ┌────────────────────────────────────────────────────────────┘
+       │
+       ▼
+    ┌──────────┐      ┌──────────┐      ┌──────────┐      ┌──────────┐
+    │  API     │──────►│  Auth    │──────►│ Verify  │──────►│  Grant   │
+    │  Request │      │  Middle  │      │   JWT   │      │  Access  │
+    └──────────┘      └──────────┘      └──────────┘      └──────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         API ENDPOINTS OVERVIEW                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    AUTH:        POST /api/auth/register
+                 POST /api/auth/login
+                 POST /api/auth/logout
+                 GET  /api/auth/me
+
+    STUDENTS:    GET    /api/students
+                 GET    /api/students/:id
+                 POST   /api/students
+                 PUT    /api/students/:id
+                 DELETE /api/students/:id
+
+    TEACHERS:    GET    /api/teachers
+                 GET    /api/teachers/:id
+                 POST   /api/teachers
+                 PUT    /api/teachers/:id
+                 DELETE /api/teachers/:id
+
+    COURSES:     GET    /api/courses
+                 GET    /api/courses/:id
+                 POST   /api/courses
+                 PUT    /api/courses/:id
+                 DELETE /api/courses/:id
+
+    ATTENDANCE:  GET    /api/attendance
+                 GET    /api/attendance/:id
+                 POST   /api/attendance
+                 PUT    /api/attendance/:id
+                 GET    /api/attendance/student/:studentId
+                 GET    /api/attendance/course/:courseId
+
+    ACTIVITIES:  GET    /api/activities
+                 GET    /api/activities/:id
+                 POST   /api/activities
+                 PUT    /api/activities/:id
+                 DELETE /api/activities/:id
+
+    ANALYTICS:   GET    /api/analytics/attendance/:courseId
+                 GET    /api/analytics/performance/:studentId
+                 GET    /api/analytics/overview
+
+```
